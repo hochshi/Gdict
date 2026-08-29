@@ -71,7 +71,7 @@ a[href^="sound://"]:hover{background:var(--speaker-hover);}
 .ussymbol{display:inline-block;padding:1px 5px;margin:0 3px;border-radius:4px;font-size:.75em;font-weight:600;background:var(--tag-bg);color:var(--tag-color);}
 .label,.sense{margin:3px 0;padding:1px 0;}
 .definition,.def{margin:3px 0 6px;padding-left:10px;border-left:3px solid var(--def-border);font-size:.95em;}
-.definition-play{cursor:pointer;margin:4px 0 4px 8px;padding:6px 10px;border:0;border-radius:14px;background:var(--speaker-bg);color:var(--link);font:600 13px sans-serif;}
+.definition-play{cursor:pointer;display:inline-flex;align-items:center;min-height:44px;margin:6px 4px;padding:10px 16px;border:0;border-radius:22px;background:var(--speaker-bg);color:var(--link);font:700 16px sans-serif;}
 .definition-play:hover{background:var(--speaker-hover);}
 .example,.ex{color:var(--example);font-style:italic;margin:3px 0 3px 14px;font-size:.9em;}
 .di-head{display:block;margin:12px 0 6px;padding-bottom:3px;border-bottom:2px solid var(--di-head-border);}
@@ -113,12 +113,12 @@ document.addEventListener('DOMContentLoaded',fixInlineStyles)
 <script>
 function addDefinitionSpeakers(){
   var selector='.definition,.def,.sense,[class*="definition"],[class*="bedeutung"],[class*="meaning"]';
-  function addButton(el){
+  function addButton(el,spokenText){
     if(el.querySelector(':scope > .definition-play')||el.querySelector(selector))return;
-    var text=(el.innerText||'').trim();
+    var text=(spokenText||el.innerText||'').trim();
     if(text.length<2||text.length>1200)return;
     var button=document.createElement('button');
-    button.type='button';button.className='definition-play';button.textContent='▶ Vorlesen';
+    button.type='button';button.className='definition-play';button.textContent='▶ Definition vorlesen';
     button.setAttribute('aria-label','Definition vorlesen');
     button.onclick=function(event){event.preventDefault();event.stopPropagation();location.href='gdict-tts:'+encodeURIComponent(text)};
     el.appendChild(button);
@@ -131,6 +131,12 @@ function addDefinitionSpeakers(){
     var list=headings[j].nextElementSibling;
     while(list&&!/^(OL|UL)$/.test(list.tagName))list=list.nextElementSibling;
     if(list)for(var k=0;k<list.children.length;k++)if(list.children[k].tagName==='LI')addButton(list.children[k]);
+  }
+  var paragraphs=document.querySelectorAll('p');
+  for(var p=0;p<paragraphs.length;p++){
+    var marker=paragraphs[p].querySelector('font[color="firebrick"],font[color="darkred"]');
+    var meaning=paragraphs[p].querySelector('i:not(.p)');
+    if(marker&&meaning)addButton(paragraphs[p],meaning.innerText);
   }
 }
 document.addEventListener('DOMContentLoaded',addDefinitionSpeakers)
