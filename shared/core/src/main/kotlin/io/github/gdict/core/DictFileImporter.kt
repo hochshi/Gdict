@@ -234,7 +234,9 @@ class DictFileImporter(private val fileSystemAccess: FileSystemAccess) {
         for (mdd in candidates) {
             if (mdd.exists() && mdd.length() > 0) return mdd
         }
-        return null
+        return parentDir.listFiles()
+            ?.filter { it.isFile && it.name.endsWith(".mdd", ignoreCase = true) && it.length() > 0 }
+            ?.singleOrNull()
     }
 
     fun scanDirectory(dirPath: String): List<DictCandidate> {
