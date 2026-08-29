@@ -125,12 +125,12 @@ fun WordDetailScreen(
 
     DisposableEffect(Unit) {
         var ttsInstance: TextToSpeech? = null
-        ttsInstance = TextToSpeech(context) { status ->
+        ttsInstance = TextToSpeech(context, { status ->
             if (status == TextToSpeech.SUCCESS) {
                 ttsReady = (ttsInstance?.setLanguage(Locale.GERMANY)
                     ?: TextToSpeech.LANG_NOT_SUPPORTED) >= TextToSpeech.LANG_AVAILABLE
             }
-        }
+        }, "com.bookfusion.voice")
         tts = ttsInstance
         onDispose {
             ttsInstance.stop()
