@@ -117,8 +117,6 @@ dependencies {
 
     implementation("androidx.documentfile:documentfile:1.0.1")
 
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    
     // MDX 词典解析 (纯 Kotlin 实现，无外部依赖)
 
     testImplementation("junit:junit:4.13.2")

@@ -56,7 +56,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
 import io.github.gdict.R
 import io.github.gdict.data.AndroidDictionaryRepository
-import io.github.gdict.tts.EdgeTtsClient
 import io.github.gdict.ui.components.acrylicAmbientBackground
 import io.github.gdict.ui.theme.GdictColors
 import io.github.gdict.ui.webview.AudioPlayer
@@ -124,14 +123,25 @@ fun WordDetailScreen(
         var ttsInstance: TextToSpeech? = null
         ttsInstance = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                ttsInstance?.setLanguage(Locale.US)
-                ttsReady = true
+                ttsReady = (ttsInstance?.setLanguage(Locale.GERMANY)
+                    ?: TextToSpeech.LANG_NOT_SUPPORTED) >= TextToSpeech.LANG_AVAILABLE
             }
         }
         tts = ttsInstance
         onDispose {
             ttsInstance.stop()
             ttsInstance.shutdown()
+        }
+    }
+
+    val speakGerman: (String) -> Unit = { text ->
+        if (text.isNotBlank() && ttsReady) {
+            tts?.speak(
+                text.trim(),
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "de_${System.currentTimeMillis()}"
+            )
         }
     }
 
@@ -156,22 +166,10 @@ fun WordDetailScreen(
                     }
                 }
                 if (!played) {
-                    val edgeTtsData = withContext(Dispatchers.IO) { EdgeTtsClient.synthesize(fallbackWord) }
-                    if (edgeTtsData != null) {
-                        played = withContext(Dispatchers.IO) { AudioPlayer.play(context, edgeTtsData) }
-                    }
-                }
-                if (!played) {
-                    val engine = tts
-                    if (engine != null && ttsReady) {
-                        engine.speak(fallbackWord, TextToSpeech.QUEUE_FLUSH, null, "pron_${System.currentTimeMillis()}")
-                    }
+                    speakGerman(fallbackWord)
                 }
             } catch (_: Exception) {
-                val engine = tts
-                if (engine != null && ttsReady) {
-                    engine.speak(fallbackWord, TextToSpeech.QUEUE_FLUSH, null, "pron_${System.currentTimeMillis()}")
-                }
+                speakGerman(fallbackWord)
             }
         }
     }
@@ -318,27 +316,10 @@ fun WordDetailScreen(
                                             }
 
                                             if (!played) {
-                                                val edgeTtsData = withContext(Dispatchers.IO) {
-                                                    EdgeTtsClient.synthesize(word)
-                                                }
-                                                if (edgeTtsData != null) {
-                                                    played = withContext(Dispatchers.IO) {
-                                                        AudioPlayer.play(context, edgeTtsData)
-                                                    }
-                                                }
-                                            }
-
-                                            if (!played) {
-                                                val engine = tts
-                                                if (engine != null && ttsReady) {
-                                                    engine.speak(word, TextToSpeech.QUEUE_FLUSH, null, "word_${System.currentTimeMillis()}")
-                                                }
+                                                speakGerman(word)
                                             }
                                         } catch (_: Exception) {
-                                            val engine = tts
-                                            if (engine != null && ttsReady) {
-                                                engine.speak(word, TextToSpeech.QUEUE_FLUSH, null, "word_${System.currentTimeMillis()}")
-                                            }
+                                            speakGerman(word)
                                         } finally {
                                             delay(500)
                                             isPlaying = false
@@ -438,30 +419,14 @@ fun WordDetailScreen(
                                 }
 
                                 if (!played) {
-                                    val edgeTtsData = withContext(Dispatchers.IO) {
-                                        EdgeTtsClient.synthesize(fallbackWord)
-                                    }
-                                    if (edgeTtsData != null) {
-                                        played = withContext(Dispatchers.IO) {
-                                            AudioPlayer.play(context, edgeTtsData)
-                                        }
-                                    }
-                                }
-
-                                if (!played) {
-                                    val engine = tts
-                                    if (engine != null && ttsReady) {
-                                        engine.speak(fallbackWord, TextToSpeech.QUEUE_FLUSH, null, "audio_${System.currentTimeMillis()}")
-                                    }
+                                    speakGerman(fallbackWord)
                                 }
                             } catch (_: Exception) {
-                                val engine = tts
-                                if (engine != null && ttsReady) {
-                                    engine.speak(fallbackWord, TextToSpeech.QUEUE_FLUSH, null, "audio_${System.currentTimeMillis()}")
-                                }
+                                speakGerman(fallbackWord)
                             }
                         }
-                    }
+                    },
+                    onSpeakText = speakGerman
                 )
                     1 -> {
                         val examples = remember(definition) { dictionaryRepository.extractExamples(definition) }
@@ -699,7 +664,8 @@ private fun DefinitionCard(
     contentScale: Float = 1f,
     dictionaryRepository: AndroidDictionaryRepository,
     onEntryClick: (String) -> Unit = {},
-    onPlayAudio: (String) -> Unit = {}
+    onPlayAudio: (String) -> Unit = {},
+    onSpeakText: (String) -> Unit = {}
 ) {
     val scaledPadding = (20.dp * contentScale)
     val scaledTitleFontSize = (14.sp * contentScale)
@@ -735,7 +701,8 @@ private fun DefinitionCard(
                 contentScale = contentScale,
                 dictionaryRepository = dictionaryRepository,
                 onEntryClick = onEntryClick,
-                onPlayAudio = onPlayAudio
+                onPlayAudio = onPlayAudio,
+                onSpeakText = onSpeakText
             )
         }
     }

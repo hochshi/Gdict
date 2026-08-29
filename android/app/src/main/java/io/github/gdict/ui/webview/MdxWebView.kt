@@ -1,6 +1,7 @@
 package io.github.gdict.ui.webview
 
 import android.os.Build
+import android.net.Uri
 import android.view.ViewGroup
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -21,7 +22,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayInputStream
-import java.net.URLDecoder
 import kotlin.math.roundToInt
 
 val TRANSPARENT_PNG = byteArrayOf(
@@ -44,7 +44,8 @@ fun MdxWebView(
     contentScale: Float = 1f,
     dictionaryRepository: AndroidDictionaryRepository,
     onEntryClick: (String) -> Unit = {},
-    onPlayAudio: (String) -> Unit = {}
+    onPlayAudio: (String) -> Unit = {},
+    onSpeakText: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -53,6 +54,7 @@ fun MdxWebView(
     val currentCss by rememberUpdatedState(css)
     val currentOnEntryClick by rememberUpdatedState(onEntryClick)
     val currentOnPlayAudio by rememberUpdatedState(onPlayAudio)
+    val currentOnSpeakText by rememberUpdatedState(onSpeakText)
     val currentScale by rememberUpdatedState(contentScale)
 
     AndroidView(
@@ -94,8 +96,12 @@ fun MdxWebView(
                             currentOnEntryClick(entry)
                             return true
                         }
+                        if (url.startsWith("gdict-tts:")) {
+                            currentOnSpeakText(Uri.decode(url.removePrefix("gdict-tts:")))
+                            return true
+                        }
                         if (url.startsWith("sound://")) {
-                            val audioPath = url.removePrefix("sound://")
+                            val audioPath = Uri.decode(url.removePrefix("sound://"))
                             coroutineScope.launch {
                                 try {
                                     val audioData = dictionaryRepository.getAudioResourceByPath(audioPath)

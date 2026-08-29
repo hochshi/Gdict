@@ -71,6 +71,8 @@ a[href^="sound://"]:hover{background:var(--speaker-hover);}
 .ussymbol{display:inline-block;padding:1px 5px;margin:0 3px;border-radius:4px;font-size:.75em;font-weight:600;background:var(--tag-bg);color:var(--tag-color);}
 .label,.sense{margin:3px 0;padding:1px 0;}
 .definition,.def{margin:3px 0 6px;padding-left:10px;border-left:3px solid var(--def-border);font-size:.95em;}
+.definition-play{cursor:pointer;margin:4px 0 4px 8px;padding:6px 10px;border:0;border-radius:14px;background:var(--speaker-bg);color:var(--link);font:600 13px sans-serif;}
+.definition-play:hover{background:var(--speaker-hover);}
 .example,.ex{color:var(--example);font-style:italic;margin:3px 0 3px 14px;font-size:.9em;}
 .di-head{display:block;margin:12px 0 6px;padding-bottom:3px;border-bottom:2px solid var(--di-head-border);}
 .di-title{display:block;font-size:1.2em;font-weight:700;}
@@ -104,6 +106,34 @@ body.dark ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.35);}
 function setTheme(d){if(d){document.body.classList.add('dark')}else{document.body.classList.remove('dark')}}
 function fixInlineStyles(){if(!document.body.classList.contains('dark'))return;var els=document.querySelectorAll('[style]');for(var i=0;i<els.length;i++){var s=els[i].style;var bg=s.backgroundColor||'';if(bg){var lb=bg.toLowerCase();if(lb.indexOf('#fff')>=0||lb.indexOf('#ffffff')>=0||lb.indexOf('white')>=0||lb.indexOf('rgb(255,')>=0){s.backgroundColor=''}}var bi=s.backgroundImage||'';if(bi&&bi.indexOf('url(')>=0&&bi.indexOf('data:')<0){s.backgroundImage='none'}var co=s.color||'';if(co){var lc=co.toLowerCase();if(lc.indexOf('#000')>=0||lc.indexOf('#000000')>=0||lc.indexOf('black')>=0||lc.indexOf('rgb(0,')>=0){s.color=''}}var b=s.background||'';if(b&&b.indexOf('#fff')>=0){s.background=''}}}
 document.addEventListener('DOMContentLoaded',fixInlineStyles)
+</script>
+"""
+
+    private val DEFINITION_TTS_JS = """
+<script>
+function addDefinitionSpeakers(){
+  var selector='.definition,.def,.sense,[class*="definition"],[class*="bedeutung"],[class*="meaning"]';
+  function addButton(el){
+    if(el.querySelector(':scope > .definition-play')||el.querySelector(selector))return;
+    var text=(el.innerText||'').trim();
+    if(text.length<2||text.length>1200)return;
+    var button=document.createElement('button');
+    button.type='button';button.className='definition-play';button.textContent='▶ Vorlesen';
+    button.setAttribute('aria-label','Definition vorlesen');
+    button.onclick=function(event){event.preventDefault();event.stopPropagation();location.href='gdict-tts:'+encodeURIComponent(text)};
+    el.appendChild(button);
+  }
+  var definitions=document.querySelectorAll(selector);
+  for(var i=0;i<definitions.length;i++)addButton(definitions[i]);
+  var headings=document.querySelectorAll('h1,h2,h3,h4,h5,h6');
+  for(var j=0;j<headings.length;j++){
+    if(!/bedeutung|definition/i.test(headings[j].innerText||''))continue;
+    var list=headings[j].nextElementSibling;
+    while(list&&!/^(OL|UL)$/.test(list.tagName))list=list.nextElementSibling;
+    if(list)for(var k=0;k<list.children.length;k++)if(list.children[k].tagName==='LI')addButton(list.children[k]);
+  }
+}
+document.addEventListener('DOMContentLoaded',addDefinitionSpeakers)
 </script>
 """
 
@@ -168,6 +198,7 @@ $dictCssBlock
 </head>
 <body class="$bodyClass">
 $bodyContent
+$DEFINITION_TTS_JS
 </body>
 </html>
             """.trimIndent()
@@ -190,6 +221,7 @@ $rendererCssBlock
 <body class="$bodyClass">
 $bodyContent
 $THEME_JS
+$DEFINITION_TTS_JS
 <script>fixInlineStyles();</script>
 </body>
 </html>
