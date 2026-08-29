@@ -120,8 +120,7 @@ fun WordDetailScreen(
     var isPlaying by remember { mutableStateOf(false) }
     var contentScale by remember { mutableStateOf(1f) }
     val definitionAudioPath = remember(definition) {
-        Regex("""href=["']sound://([^"']+)["']""", RegexOption.IGNORE_CASE)
-            .find(definition)?.groupValues?.get(1)?.let(Uri::decode)
+        extractDefinitionAudioPath(definition)?.let(Uri::decode)
     }
 
     DisposableEffect(Unit) {
@@ -449,6 +448,12 @@ fun WordDetailScreen(
     }
     }
 }
+
+internal fun extractDefinitionAudioPath(definition: String): String? =
+    Regex("""href=["']sound://([^"']+)["']""", RegexOption.IGNORE_CASE)
+        .find(definition)?.groupValues?.get(1)
+        ?: Regex("""(?:src|data-src)=["']([^"']+\.(?:wav|mp3|ogg|spx))["']""", RegexOption.IGNORE_CASE)
+            .find(definition)?.groupValues?.get(1)
 
 @Composable
 private fun ExamplesCard(
