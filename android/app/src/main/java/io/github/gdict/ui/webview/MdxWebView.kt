@@ -152,7 +152,7 @@ fun MdxWebView(
                         }
                         val rawPath = request.url?.path
                             ?: return super.shouldInterceptRequest(view, request)
-                        val path = URLDecoder.decode(rawPath, "UTF-8")
+                        val path = Uri.decode(rawPath)
                         val lowerPath = path.lowercase()
                         if (!isInterceptableExtension(lowerPath)) {
                             return super.shouldInterceptRequest(view, request)
