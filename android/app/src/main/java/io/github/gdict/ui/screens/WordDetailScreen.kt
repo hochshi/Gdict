@@ -1,5 +1,6 @@
 package io.github.gdict.ui.screens
 
+import android.net.Uri
 import android.speech.tts.TextToSpeech
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -118,6 +119,10 @@ fun WordDetailScreen(
     var ttsReady by remember { mutableStateOf(false) }
     var isPlaying by remember { mutableStateOf(false) }
     var contentScale by remember { mutableStateOf(1f) }
+    val definitionAudioPath = remember(definition) {
+        Regex("""href=["']sound://([^"']+)["']""", RegexOption.IGNORE_CASE)
+            .find(definition)?.groupValues?.get(1)?.let(Uri::decode)
+    }
 
     DisposableEffect(Unit) {
         var ttsInstance: TextToSpeech? = null
@@ -307,7 +312,9 @@ fun WordDetailScreen(
                                             var played = false
 
                                             val mddAudio = withContext(Dispatchers.IO) {
-                                                dictionaryRepository.getAudioResource(word)
+                                                definitionAudioPath?.let {
+                                                    dictionaryRepository.getAudioResourceByPath(it)
+                                                } ?: dictionaryRepository.getAudioResource(word)
                                             }
                                             if (mddAudio != null) {
                                                 played = withContext(Dispatchers.IO) {
