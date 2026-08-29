@@ -452,7 +452,7 @@ fun WordDetailScreen(
 internal fun extractDefinitionAudioPath(definition: String): String? =
     Regex("""href=["']sound://([^"']+)["']""", RegexOption.IGNORE_CASE)
         .find(definition)?.groupValues?.get(1)
-        ?: Regex("""(?:src|data-src)=["']([^"']+\.(?:wav|mp3|ogg|spx))["']""", RegexOption.IGNORE_CASE)
+        ?: Regex("""(?:src|data-src|data)=["']([^"']+\.(?:wav|mp3|ogg|spx))["']""", RegexOption.IGNORE_CASE)
             .find(definition)?.groupValues?.get(1)
 
 @Composable
